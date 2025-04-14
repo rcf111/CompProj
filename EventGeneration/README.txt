@@ -1,5 +1,8 @@
+IMPORTANT INFO FOR SHANNON AND RICHARD IF YOU WANT TO RUN MY CODE:
+
 You need to change the path to pythia in the makefile according to where it is saved on your system, since I hardcoded the paths into the makefile. Perhaps also the path for the root libraries
-might need adjustment.
+might need adjustment. I suggest that you copy your absolute paths into the makefile but leave the others there. Then we can just use it by commenting and uncommenting the appropiate lines. Apparently there is no smarter way to do this.
+
 Then you can do:
 
 1. compile everything:
