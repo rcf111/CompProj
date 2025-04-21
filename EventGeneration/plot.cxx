@@ -43,17 +43,15 @@ void plot() {
     double pT_test;
     tree->SetBranchAddress("eta", &eta_test);
     tree->SetBranchAddress("pT", &pT_test);
-    tree->SetBranchStatus("*", false);
-    tree->SetBranchStatus("eta", true);
+    tree->SetBranchStatus("eta", true); 
+    tree->SetBranchStatus("pT", true);  
+    
 
     int totalMuons = tree->GetEntries();
     int detectedMuons = 0;
     for (int iEntry = 0; tree->LoadTree(iEntry) >= 0; ++iEntry) {
     // Load the data for the given tree entry
         tree->GetEntry(iEntry);
-        tree->SetBranchStatus("*", false);
-        tree->SetBranchStatus("pT", true);
-        
         if (pT_test > 5.0 && fabs(eta_test) < 2.5) {
             detectedMuons++;
             }
