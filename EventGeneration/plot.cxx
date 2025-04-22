@@ -16,13 +16,13 @@ void plot() {
     std::ifstream rap_dataFile("rap.dat");
 
     // Create and save the ROOT file
-    TFile* data_file = new TFile("signal.root", "RECREATE");
-    TTree* tree = new TTree("dataTree", "Data from ASCII file");
+     TFile* data_file = new TFile("signal.root", "RECREATE");
+     TTree* tree = new TTree("dataTree", "Data from ASCII file");
 
     double pT, eta;
     tree->Branch("pT", &pT, "pT/D");
     tree->Branch("eta", &eta, "eta/D");
-
+   
     int count = 0;
     while (pT_dataFile >> pT && rap_dataFile >> eta) {
         tree->Fill();
@@ -70,8 +70,8 @@ void plot() {
     canvas->SetFillColor(kWhite);
 
     // Create histograms
-    TH1F* eta_hist = new TH1F("eta", "Pseudorapidity", 50, -11, 11);
-    TH1F* pT_hist = new TH1F("pT", "Transverse Momentum", 150, 0, 30);
+    TH1F* eta_hist = new TH1F("eta", "Pseudorapidity", 100, -11, 11);
+    TH1F* pT_hist = new TH1F("pT", "Transverse Momentum", 250, 0, 60);
 
 
     double pT1, eta1;

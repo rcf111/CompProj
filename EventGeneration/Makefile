@@ -13,12 +13,12 @@ CXXFLAGS = $(PYTHIAINC) $(ROOTINC)
 LDFLAGS = $(PYTHIALIB) $(ROOTLIBS) -L/usr/lib/x86_64-linux-gnu/ -ltbb
 
 
-GARBAGE = $(wildcard *.o) $(wildcard *.root) $(wildcard *.dat) $(OUT1) $(OUT2) 
+GARBAGE = $(wildcard *.o) $(wildcard *.dat) $(OUT1) $(OUT2) 
 
 all: $(OUT1) $(OUT2)
 
 $(OUT1): $(SRC1)
-	$(CXX) $(PYTHIAINC) $(SRC1) $(PYTHIALIB) -lpythia8 -o $(OUT1)
+	$(CXX)  $(ROOTINC) $(PYTHIAINC) $(SRC1) $(ROOTLIBS) $(PYTHIALIB) -lpythia8 -o $(OUT1)
 
 compile_plot $(OUT2): $(SRC2)
 	$(CXX) $(ROOTINC) $(SRC2) $(ROOTLIBS) -o $(OUT2)

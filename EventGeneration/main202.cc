@@ -3,6 +3,8 @@
 #include "iostream"
 #include <fstream>
 #include <chrono>
+#include "TFile.h"  
+#include "TTree.h"
 
 
 using namespace Pythia8;
@@ -14,8 +16,15 @@ int main() {
   PythiaParallel pythia;
 
   pythia.readString("Print:quiet=on");
-  pythia.readString("SoftQCD:nonDiffractive = on");
+  pythia.readString("WeakSingleBoson:ffbar2gmZ=on");
+  pythia.readString("PhaseSpace:mHatMin = 80.");
   pythia.readString("Beams:eCM = 13600");
+
+/**
+ * Possible physics settings for background:
+ * Top:gg2ttbar
+ * 
+ */
 
   //Force Z bosons only to decay into muons
   pythia.readString("23:oneChannel = 1 1.0 0 13 -13");
@@ -30,7 +39,7 @@ int main() {
   // start stop watch
   auto start = std::chrono::high_resolution_clock::now();
   
-  //Paralllised version runtime for 15000 events; 13.5 s
+  //Paralllised version runtime for 15000 events; 42 s
   pythia.run(1000000, [&](Pythia* pythiaPtr){
     for(int iPart = 0; iPart < pythiaPtr->event.size(); iPart++){
       if(pythiaPtr->event[iPart].id() == 13){
@@ -48,6 +57,31 @@ int main() {
 
   std::cout << "DONE!" << std::endl;
   // Done.
+
+
+  // // Open data files
+  std::ifstream pT_dataFile("pT.dat");
+  std::ifstream rap_dataFile("rap.dat");
+
+  // Create and save the ROOT file
+  TFile* data_file = new TFile("signal.root", "RECREATE");
+  TTree* tree = new TTree("dataTree", "Data from ASCII file");
+
+  double pT, eta;
+  tree->Branch("pT", &pT, "pT/D");
+  tree->Branch("eta", &eta, "eta/D");
+
+  int count = 0;
+  while (pT_dataFile >> pT && rap_dataFile >> eta) {
+    tree->Fill();
+    count++;
+  }
+
+  tree->Write();
+  data_file->Close();
+
+  pT_dataFile.close();
+  rap_dataFile.close();
 
   return 0;
 }
