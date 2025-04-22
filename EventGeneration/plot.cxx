@@ -11,33 +11,10 @@
 
 
 void plot() {
-    // Open data files
-    std::ifstream pT_dataFile("pT.dat");
-    std::ifstream rap_dataFile("rap.dat");
-
-    // Create and save the ROOT file
-     TFile* data_file = new TFile("signal.root", "RECREATE");
-     TTree* tree = new TTree("dataTree", "Data from ASCII file");
-
-    double pT, eta;
-    tree->Branch("pT", &pT, "pT/D");
-    tree->Branch("eta", &eta, "eta/D");
    
-    int count = 0;
-    while (pT_dataFile >> pT && rap_dataFile >> eta) {
-        tree->Fill();
-        count++;
-    }
-
-    tree->Write();
-    data_file->Close();
-
-    pT_dataFile.close();
-    rap_dataFile.close();
-
-    // Reopen the ROOT file and retrieve the tree
-    data_file = new TFile("signal.root", "READ");
-    tree = (TTree*)data_file->Get("dataTree");
+    //Open the ROOT file and retrieve the tree
+    TFile* data_file = new TFile("signal.root", "READ");
+    TTree* tree = (TTree*)data_file->Get("dataTree");
 
     double eta_test;
     double pT_test;
