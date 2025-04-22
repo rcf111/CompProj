@@ -16,7 +16,7 @@ void plot() {
     std::ifstream rap_dataFile("rap.dat");
 
     // Create and save the ROOT file
-    TFile* data_file = new TFile("data.root", "RECREATE");
+    TFile* data_file = new TFile("signal.root", "RECREATE");
     TTree* tree = new TTree("dataTree", "Data from ASCII file");
 
     double pT, eta;
@@ -36,7 +36,7 @@ void plot() {
     rap_dataFile.close();
 
     // Reopen the ROOT file and retrieve the tree
-    data_file = new TFile("data.root", "READ");
+    data_file = new TFile("signal.root", "READ");
     tree = (TTree*)data_file->Get("dataTree");
 
     double eta_test;
@@ -52,7 +52,7 @@ void plot() {
     for (int iEntry = 0; tree->LoadTree(iEntry) >= 0; ++iEntry) {
     // Load the data for the given tree entry
         tree->GetEntry(iEntry);
-        if (pT_test > 5.0 && fabs(eta_test) < 2.5) {
+        if (pT_test > 20.0 && fabs(eta_test) < 2.1) {
             detectedMuons++;
             }
     }
@@ -65,13 +65,13 @@ void plot() {
 
 
     // Create a canvas
-    TCanvas* canvas = new TCanvas("canvas", "Muon minimum bias events", 1000, 1000);
+    TCanvas* canvas = new TCanvas("canvas", "Muons from Z boson decays", 1000, 1000);
     canvas->Divide(1, 2);
     canvas->SetFillColor(kWhite);
 
     // Create histograms
     TH1F* eta_hist = new TH1F("eta", "Pseudorapidity", 50, -11, 11);
-    TH1F* pT_hist = new TH1F("pT", "Transverse Momentum", 50, 0, 7);
+    TH1F* pT_hist = new TH1F("pT", "Transverse Momentum", 150, 0, 30);
 
 
     double pT1, eta1;

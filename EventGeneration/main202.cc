@@ -4,18 +4,22 @@
 #include <fstream>
 #include <chrono>
 
+
 using namespace Pythia8;
 
 //==========================================================================
 
 int main() {
-  //Choose which one you want to use, needs to be compatible with what version you choose below
-  //Pythia pythia;
+  // We run pythia in parallel mode because its faster
   PythiaParallel pythia;
 
   pythia.readString("Print:quiet=on");
   pythia.readString("SoftQCD:nonDiffractive = on");
   pythia.readString("Beams:eCM = 13600");
+
+  //Force Z bosons only to decay into muons
+  pythia.readString("23:oneChannel = 1 1.0 0 13 -13");
+
   if(!pythia.init()) return 1;
 
   std::ofstream pT_out("pT.dat");
@@ -26,24 +30,8 @@ int main() {
   // start stop watch
   auto start = std::chrono::high_resolution_clock::now();
   
-  // Unparallelised version runtime for 15000 events: 42.5 s
-  // for(int iEvent=0; iEvent<15000; iEvent++){
-  //   if(!pythia.next()) continue;
-
-  //   for(int iPart = 0; iPart < pythia.event.size(); iPart++){
-  //     if(pythia.event[iPart].id() == 13){
-  //       pT_out << pythia.event[iPart].pT() << endl;
-  //       rap_out << pythia.event[iPart].eta() << endl;
-  //     }
-  //   }
-  //   int steps = iEvent % 1000;
-  //   if(steps==0){
-  //     std::cout << "Event number " << iEvent << " has been processed" << std::endl;
-  //   }
-  // }
-
   //Paralllised version runtime for 15000 events; 13.5 s
-  pythia.run(15000, [&](Pythia* pythiaPtr){
+  pythia.run(1000000, [&](Pythia* pythiaPtr){
     for(int iPart = 0; iPart < pythiaPtr->event.size(); iPart++){
       if(pythiaPtr->event[iPart].id() == 13){
         pT_out << pythiaPtr->event[iPart].pT() << endl;
@@ -60,5 +48,6 @@ int main() {
 
   std::cout << "DONE!" << std::endl;
   // Done.
+
   return 0;
 }
