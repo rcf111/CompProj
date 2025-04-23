@@ -14,6 +14,7 @@ void plot() {
    
     //Open the ROOT file and retrieve the tree
     TFile* data_file = new TFile("signal.root", "READ");
+    //TFile* data_file = new TFile("background.root", "READ");
     TTree* tree = (TTree*)data_file->Get("dataTree");
 
     double eta_test;
@@ -42,7 +43,8 @@ void plot() {
 
 
     // Create a canvas
-    TCanvas* canvas = new TCanvas("canvas", "Muons from Z boson decays", 1000, 1000);
+    TCanvas* canvas = new TCanvas("canvas", "Muons from Z boson decays signal", 1000, 1000);
+    //TCanvas* canvas = new TCanvas("canvas", "Muons from Z boson decays background", 1000, 1000);
     canvas->Divide(1, 2);
     canvas->SetFillColor(kWhite);
 

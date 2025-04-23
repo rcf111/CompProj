@@ -15,10 +15,12 @@ int main() {
   // We run pythia in parallel mode because its faster
   PythiaParallel pythia;
 
-  pythia.readString("Print:quiet=on");
-  pythia.readString("WeakSingleBoson:ffbar2gmZ=on");
-  pythia.readString("PhaseSpace:mHatMin = 80.");
-  pythia.readString("Beams:eCM = 13600");
+  // // For generating the signal
+  // pythia.readString("Print:quiet=on");
+  // pythia.readString("WeakSingleBoson:ffbar2gmZ=on");
+  // // Force Z bosons only to decay into muons
+  // pythia.readString("23:oneChannel = 1 1.0 0 13 -13");
+  
 
 /**
  * Possible physics settings for background:
@@ -26,8 +28,23 @@ int main() {
  * 
  */
 
-  //Force Z bosons only to decay into muons
-  pythia.readString("23:oneChannel = 1 1.0 0 13 -13");
+  // For generating the background
+  pythia.readString("Top:gg2ttbar = on");
+  pythia.readString("Top:qqbar2ttbar = on");
+
+  pythia.readString("6:onMode = off");
+  pythia.readString("6:onIfMatch = 24 5");
+
+  pythia.readString("24:onMode = off");
+  pythia.readString("24:onIfMatch = -13 14");
+  pythia.readString("-24:onMode = off");
+  pythia.readString("-24:onIfMatch = 13 -14");
+
+// Optional: Turn off hadronization if you want partons only
+// pythia.readString("HadronLevel:all = off");
+
+  pythia.readString("PhaseSpace:mHatMin = 80.");
+  pythia.readString("Beams:eCM = 13600");
 
   if(!pythia.init()) return 1;
 
@@ -64,7 +81,8 @@ int main() {
   std::ifstream rap_dataFile("rap.dat");
 
   // Create and save the ROOT file
-  TFile* data_file = new TFile("signal.root", "RECREATE");
+  //TFile* data_file = new TFile("signal.root", "RECREATE");
+  TFile* data_file = new TFile("background.root", "RECREATE"); 
   TTree* tree = new TTree("dataTree", "Data from ASCII file");
 
   double pT, eta;
