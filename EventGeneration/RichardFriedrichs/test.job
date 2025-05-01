@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+export LD_LIBRARY_PATH=:/home/rcf111/uusroot/lib:/home/rcf111/uusroot/lib:pythia8313/lib
+export PYTHIA8DATA=/home/rcf111/CompProj/EventGeneration/RichardFriedrichs/pythia8313/share/Pythia8/xmldoc
+./makesignal
+./makebackground
