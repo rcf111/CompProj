@@ -79,7 +79,7 @@ int main() {
             }
             }
         }
-        if (good_muons ==2){
+        if (good_muons => 2){
             HLT_DoubleIsoMu20_eta2p1 = 1;
         }
         else HLT_DoubleIsoMu20_eta2p1 = 0;
