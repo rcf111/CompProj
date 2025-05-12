@@ -19,13 +19,13 @@ int main() {
     pythia.readString("24:onIfMatch = -13 14");
     pythia.readString("-24:onMode = off");
     pythia.readString("-24:onIfMatch = 13 -14");
-    pythia.readString("PhaseSpace:mHatMin = 80.");
+    pythia.readString("PhaseSpace:mHatMin = 75.");
     pythia.readString("Beams:eCM = 13600");
     pythia.init();
     int passedEvents=0;
 
     // Output ROOT file and tree
-    TFile* outFile = new TFile("Unfiltered_background.root", "RECREATE");
+    TFile* outFile = new TFile("Background.root", "RECREATE");
     TTree* tree = new TTree("Events", "Data");
 
     // Declare variables and branches

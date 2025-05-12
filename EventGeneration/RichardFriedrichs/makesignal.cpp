@@ -12,13 +12,13 @@ int main() {
     pythia.readString("Print:quiet=on");
     pythia.readString("WeakSingleBoson:ffbar2gmZ=on");
     pythia.readString("23:oneChannel = 1 1.0 0 13 -13");
-    pythia.readString("PhaseSpace:mHatMin = 80.");
+    pythia.readString("PhaseSpace:mHatMin = 75.");
     pythia.readString("Beams:eCM = 13600");
     pythia.init();
     int passedEvents=0;
 
     // Output ROOT file and tree
-    TFile* outFile = new TFile("Unfiltered_signal.root", "RECREATE");
+    TFile* outFile = new TFile("Signal.root", "RECREATE");
     TTree* tree = new TTree("Events", "Data");
 
     // Declare variables and branches
