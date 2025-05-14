@@ -25,7 +25,7 @@ def is_isolated(muon_idx, Id, Eta, Phi, px, py, pz):
     return sum_pion_p < 1.5
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 2:
         print("Usage: python isolation_filter.py input.root")
         return
 
@@ -58,7 +58,7 @@ def main():
             tree_out.Fill()
 
 
-    tree_out.Write()
+    #tree_out.Write()
     f_out.Close()
     print(f"Filtered events written to: {output_file}")
 
