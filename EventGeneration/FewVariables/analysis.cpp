@@ -19,8 +19,8 @@ const std::vector<std::string> inputFiles = {
     "Isolated_Stricterfiltered_Smeared_filtered_Background.root"
 };
 const std::vector<double> scaleFactors = {
-    0.250,   // <-- scale for signal file (See read.me to see how I got them)
-    0.004   // <-- scale for background file
+    4.542*0.6,   // <-- scale for signal file (See read.me to see how I got them)
+    0.062 *0.6 // <-- scale for background file
 };
 
 // Mass range for histogram and fit
@@ -40,6 +40,9 @@ int main() {
     TH1F* combinedHist = new TH1F("combinedHist", "Dimuon Invariant Mass;Mass (GeV);Events", histBins, massMin, massMax);
 
     for (size_t i = 0; i < inputFiles.size(); ++i) {
+        //Only for debugging
+        //if(i ==1){break;}
+
         TFile* file = TFile::Open(inputFiles[i].c_str());
         if (!file || file->IsZombie()) {
             std::cerr << "Error opening file: " << inputFiles[i] << std::endl;
@@ -66,10 +69,12 @@ int main() {
         ROOT::VecOps::RVec<float>* Pt = nullptr;
         ROOT::VecOps::RVec<float>* Theta = nullptr;
         ROOT::VecOps::RVec<float>* Phi = nullptr;
+        ROOT::VecOps::RVec<int>* Id = nullptr;
 
         tree->SetBranchAddress("Pt", &Pt);
         tree->SetBranchAddress("Theta", &Theta);
         tree->SetBranchAddress("Phi", &Phi);
+        tree->SetBranchAddress("Id", &Id);
 
         Long64_t nEntries = tree->GetEntries();
         
@@ -99,38 +104,49 @@ int main() {
 
             // Collect muons in this event
             std::vector<TLorentzVector> muons;
+            TLorentzVector p4;
 
-            for (size_t idx = 0; idx < Pt->size(); ++idx) {
+            for (size_t idx = 0; idx < Id->size(); ++idx) {
                 // Build 4-vector (mass assumed 0.105 GeV for muon)
-                double mass_mu = 0.105;
-                double pt = Pt->at(idx);
-                double Eta_val = Eta.at(idx);
-                double Phi_val = Phi->at(idx);
-                TLorentzVector p4;
-                p4.SetPtEtaPhiM(pt, Eta_val, Phi_val, mass_mu);
-                muons.push_back(p4);
+                if(Id->at(idx) == 13 or Id->at(idx) == -13){
+                    double mass_mu = 0.105;
+                    double px = Pt->at(idx) *std::cos(Phi->at(idx));
+                    double py = Pt->at(idx) *std::sin(Phi->at(idx));
+                    double pz = Pt->at(idx)/std::tan(Theta->at(idx));
+                    double p = std::sqrt(px*px + py*py + pz*pz);
+                    double e = std::sqrt(p*p + mass_mu*mass_mu);
+                    p4.SetPxPyPzE(px,py,pz,e);
+                    muons.push_back(p4);
+                }
             }
 
+
+             
+
             // Require at least two muons
-            if (muons.size() < 2) continue;
+            if (muons.size() >= 2){
 
             // Use last two muons to calculate invariant mass (as in your original code)
-            TLorentzVector dimuon = muons[muons.size() - 1] + muons[muons.size() - 2];
-            double mass = dimuon.M();
-
+            double mass = (muons[muons.size()-1] + muons[muons.size()-2]).M();
+            //std::cout<< mass <<std::endl;
             tempHist->Fill(mass);
+            }
         }
         
         // Scale histogram and add to combined
-        tempHist->Scale(scaleFactors[i]);
+        //tempHist->Scale(scaleFactors[i]);
         combinedHist->Add(tempHist);
-        TCanvas* c = new TCanvas("c", "Dimuon Mass Fit", 800, 600);
-        c->SetLogy();
+        TCanvas* canvas = new TCanvas("c", "Dimuon Mass Fit", 800, 600);
+        canvas->SetLogy();
         combinedHist->Draw();
-        c->SaveAs("dimuon_mass.png");
+        tempHist->Print();
+        //tempHist->Draw();
+        canvas->SaveAs("dimuon_mass.png");
         file->Close();
         //delete tempHist; This line causes a segmentation fault if active, I don't know why
     }
+
+   // return 0;
 
     // Fit combined histogram in the mass range
     // Define signal+background function:

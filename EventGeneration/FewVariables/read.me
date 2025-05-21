@@ -9,16 +9,16 @@ For the combined graph use:
 python/python3 graphcombiner.py signal_data.root signal_scale background_data.root background_scale
 
 You get the scale factors as follows:
-    scale factor = cross section in fb /(#of events in histogramm * bin width in GeV)
+    scale factor = cross section in fb /(#of events * bin width in GeV)
 
 From pythia we get the following cross sections:
 Signal:
     * 1536.383 pb 
     * We forced decay from Z to muons, Branching ratio of that decay 3.3662%
-    --> sigma in fb = 1536.383 pb * 0.033662 * 1000 fb/pb = 51718 fb
-    scalefactor = 51718 fb /(206621 * 1Gev) = 0.250 fb/ GeV
+    --> sigma in fb = 1536.383 pb / 0.033662 = 45414.652 pb = 4541652 fb
+    scalefactor = 4541652 fb /(1e6 * 1Gev) = 4.542 fb/ GeV
 Background:
     * 6.595 pb
     * Forced W -> mu + neutrino, Branching ratio 10.63%
-    --> sigma in fb = 6.595 pb * 0.1063 * 1000 fb/pb = 701 fb (really low, negligible really)
-    scalefactor = 701 fb/(182540 *1 GeV) = 0.004 fb/GeV
+    --> sigma in fb = 6.595 pb /0.1063 = 62.041 pb =62041 fb (really low, negligible really)
+    scalefactor = 62041 fb/(1e6 *1 GeV) = 0.062 fb/GeV

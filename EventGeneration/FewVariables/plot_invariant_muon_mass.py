@@ -53,6 +53,7 @@ for event in tree:
         p1 = muons[-1]
         p2 = muons[-2]
         mass = (p1 + p2).M()
+        print(mass)
         hist.Fill(mass)
     #print("Number of muons in event",nMuons)
 # Draw and save histogram
