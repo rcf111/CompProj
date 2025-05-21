@@ -19,7 +19,7 @@ if not tree:
     sys.exit(1)
 
 # Create histogram
-hist = TH1F("muon_mass", "Invariant Mass of Last Two Muons;Mass (GeV);Events", 100, 0, 140)
+hist = TH1F("muon_mass", "Invariant Mass of Last Two Muons;Mass (GeV);Events", 120, 0, 120)
 
 # Loop over events
 for event in tree:
@@ -57,6 +57,7 @@ for event in tree:
     #print("Number of muons in event",nMuons)
 # Draw and save histogram
 canvas = TCanvas("canvas", "canvas", 800, 600)
+canvas.SetLogy(True)
 hist.Draw()
 canvas.SaveAs(input_file.removesuffix(".root")+".png")
 

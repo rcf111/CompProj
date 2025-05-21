@@ -11,7 +11,7 @@ if len(sys.argv) < 3 or len(sys.argv[1:]) % 2 != 0:
     sys.exit(1)
 
 # Final combined histogram
-combined_hist = TH1F("combined_muon_mass", "Combined Invariant Mass of Last Two Muons;Mass (GeV);Events", 100, 0, 140)
+combined_hist = TH1F("combined_muon_mass", "Combined Invariant Mass of Last Two Muons;Mass (GeV);Events", 140, 0, 120)
 
 # Process each pair of (file, scale)
 args = sys.argv[1:]
@@ -27,7 +27,8 @@ for i in range(0, len(args), 2):
         continue
 
     # Temporary histogram for this file
-    temp_hist = TH1F(f"muon_mass_{i}", f"Invariant Mass from {input_file};Mass (GeV);Events", 100, 0, 140)
+    temp_hist = TH1F(f"muon_mass_{i}", f"Invariant Mass from {input_file};Mass (GeV);Events", 140, 0, 140)
+        
 
     for event in tree:
         muons = []
@@ -64,9 +65,12 @@ for i in range(0, len(args), 2):
     # Scale and add to combined histogram
     temp_hist.Scale(scale_factor)
     combined_hist.Add(temp_hist)
+    if i==0:
+        combined_hist.SetLineColor(ROOT.kRed)
 
 # Draw and save final combined histogram
 canvas = TCanvas("canvas", "canvas", 800, 600)
+canvas.SetLogy(True)
 combined_hist.Draw()
 canvas.SaveAs("combined_muon_invariant_mass.png")
 
