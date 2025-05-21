@@ -10,6 +10,7 @@
 #include "TF1.h"
 #include "TMath.h"
 #include "ROOT/RVec.hxx"
+#include "TLegend.h"
 
 
 // NOTE: Update these before running
@@ -19,14 +20,15 @@ const std::vector<std::string> inputFiles = {
     "Isolated_Stricterfiltered_Smeared_filtered_Background.root"
 };
 const std::vector<double> scaleFactors = {
-    4.542*0.6,   // <-- scale for signal file (See read.me to see how I got them)
-    0.062 *0.6 // <-- scale for background file
+    //4.542*0.6,   // <-- scale for signal file (See read.me to see how I got them)
+    //0.062 *0.6 // <-- scale for background file
+   3.684, 17.401
 };
 
 // Mass range for histogram and fit
 const double massMin = 60.0;
 const double massMax = 120.0;
-const int histBins = 100;
+const int histBins = 120;
 
 // Signal mass window for integration (around Z boson ~91.2 GeV)
 const double signalMassCenter = 91.2;
@@ -38,6 +40,8 @@ double integrateFunction(TF1* func, double low, double high);
 
 int main() {
     TH1F* combinedHist = new TH1F("combinedHist", "Dimuon Invariant Mass;Mass (GeV);Events", histBins, massMin, massMax);
+    TH1F* sig_Hist = new TH1F("hist_signal", "Dimuon Mass from signal file ", histBins, massMin, massMax);
+    TH1F* bg_Hist = new TH1F("hist_background", "Dimuon Mass from background file ", histBins, massMin, massMax);
 
     for (size_t i = 0; i < inputFiles.size(); ++i) {
         //Only for debugging
@@ -55,10 +59,6 @@ int main() {
             continue;
         }
 
-        // Create a temporary histogram for this file
-        TH1F* tempHist = new TH1F(("hist_" + std::to_string(i)).c_str(),
-                                  ("Dimuon Mass from file " + std::to_string(i)).c_str(),
-                                  histBins, massMin, massMax);
 
         // Set up branches (assuming branches: pT, eta, phi are arrays or std::vector<double>)
         // Modify these types if your tree has arrays or different types
@@ -120,56 +120,71 @@ int main() {
                 }
             }
 
-
-             
-
             // Require at least two muons
             if (muons.size() >= 2){
 
             // Use last two muons to calculate invariant mass (as in your original code)
             double mass = (muons[muons.size()-1] + muons[muons.size()-2]).M();
             //std::cout<< mass <<std::endl;
-            tempHist->Fill(mass);
+            if(i==0){
+                sig_Hist->Fill(mass);
+            } else if(i==1){
+                bg_Hist->Fill(mass);
+            }
+            
             }
         }
-        
+       
         // Scale histogram and add to combined
-        //tempHist->Scale(scaleFactors[i]);
-        combinedHist->Add(tempHist);
-        TCanvas* canvas = new TCanvas("c", "Dimuon Mass Fit", 800, 600);
-        canvas->SetLogy();
-        combinedHist->Draw();
-        tempHist->Print();
-        //tempHist->Draw();
-        canvas->SaveAs("dimuon_mass.png");
         file->Close();
         //delete tempHist; This line causes a segmentation fault if active, I don't know why
     }
 
-   // return 0;
+    
+    sig_Hist->Scale(scaleFactors[0]);
+    bg_Hist->Scale(scaleFactors[1]);
+    TCanvas* canvas = new TCanvas("c", "Dimuon Mass Fit", 800, 600);
+    canvas->SetLogy();
+    combinedHist->Add(sig_Hist);
+    combinedHist->Add(bg_Hist);
+    combinedHist->SetMinimum(75);
+    combinedHist->SetLineColor(kRed);
+    sig_Hist->SetLineColor(kBlue);
+    bg_Hist->SetLineColor(kGreen);
+    combinedHist->Draw();
+    sig_Hist->Draw("Same");
+    bg_Hist->Draw("Same");
+
+    TLegend* legend = new TLegend(0.1, 0.7, 0.3, 0.9);  // top-right corner
+    legend->AddEntry(combinedHist, "Combined", "l");
+    legend->AddEntry(sig_Hist, "Signal", "l");
+    legend->AddEntry(bg_Hist, "Background", "l");
+    legend->Draw();
+
+    canvas->SaveAs("dimuon_mass.png");
+
 
     // Fit combined histogram in the mass range
     // Define signal+background function:
-    // For example: background = polynomial, signal = Gaussian (adjust as needed)
+    // For example: background = exponential, signal = Gaussian (adjust as needed)
     TF1* fitFunc = new TF1("fitFunc", 
-        "[0]*TMath::Gaus(x,[1],[2],true) + [3] + [4]*x + [5]*x*x", massMin, massMax);
+        "[0]*TMath::Gaus(x,[1],[2],true) + [3] + [4]*exp(-[5]*x)", massMin, massMax);
 
     // Initial parameter guesses:
     fitFunc->SetParameters(
         combinedHist->GetMaximum(),  // Gaussian amplitude guess
         signalMassCenter,            // Mean near Z mass
         2.5,                        // Width guess (GeV)
-        10,                         // Background poly constant term
-        0,                          // Background linear term
-        0                           // Background quadratic term
+        800,                         // Background  constant term
+        0.0,                          // exp decay amplitude
+        0.0                          // decay factor
     );
 
     combinedHist->Fit(fitFunc, "R");
 
-    // Background-only function (polynomial part only)
-    TF1* bgFunc = new TF1("bgFunc", "[0] + [1]*x + [2]*x*x", massMin, massMax);
-    bgFunc->SetParameters(fitFunc->GetParameter(3),
-                         fitFunc->GetParameter(4),
+    // Background-only function (exponential part only)
+   TF1* bgFunc = new TF1("bgFunc", "[0]+[1] * exp(-[2]*x)", massMin, massMax);
+    bgFunc->SetParameters(fitFunc->GetParameter(3), fitFunc->GetParameter(4),
                          fitFunc->GetParameter(5));
 
     // Define integration window around signal peak
@@ -192,12 +207,23 @@ int main() {
 
     // Save plot with fit
     TCanvas* c = new TCanvas("c", "Dimuon Mass Fit", 800, 600);
+    combinedHist->SetMinimum(4000);
     combinedHist->Draw();
     c->SetLogy();
+    fitFunc->SetLineColor(kBlue);
     fitFunc->Draw("same");
-    bgFunc->SetLineColor(kRed);
+    bgFunc->SetLineColor(kGreen);
     bgFunc->SetLineStyle(2);
     bgFunc->Draw("same");
+    bg_Hist->SetLineColor(kOrange);
+    bg_Hist->Draw("Same");
+
+    TLegend* legend2 = new TLegend(0.15, 0.7, 0.35, 0.9);  // top-left corner
+    legend2->AddEntry(combinedHist, "Combined hist", "l");
+    legend2->AddEntry(fitFunc, "Fit", "l");
+    legend2->AddEntry(bgFunc, "Background fit", "l");
+    legend2->Draw();
+
     c->SaveAs("dimuon_mass_fit.png");
 
     delete combinedHist;

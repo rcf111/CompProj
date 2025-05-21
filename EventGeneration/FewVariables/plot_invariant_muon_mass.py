@@ -19,7 +19,7 @@ if not tree:
     sys.exit(1)
 
 # Create histogram
-hist = TH1F("muon_mass", "Invariant Mass of Last Two Muons;Mass (GeV);Events", 120, 0, 120)
+hist = TH1F("muon_mass", "Invariant Mass of Last Two Muons;Mass (GeV);Events", 120, 60, 120)
 
 # Loop over events
 for event in tree:
@@ -53,7 +53,6 @@ for event in tree:
         p1 = muons[-1]
         p2 = muons[-2]
         mass = (p1 + p2).M()
-        print(mass)
         hist.Fill(mass)
     #print("Number of muons in event",nMuons)
 # Draw and save histogram
