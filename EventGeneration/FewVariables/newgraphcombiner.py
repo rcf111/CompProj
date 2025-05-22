@@ -27,14 +27,14 @@ sig_tree = signal_file.Get("Events")
 if not sig_tree:
     print(f"Could not find TTree named 'Events' in the file {signal}. Skipping.")
 
-sig_hist = TH1F(f"muon_mass_", f"Invariant Mass from {signal};Mass (GeV);Events", 120, 0, 120)
+sig_hist = TH1F(f"muon_mass_", f"Invariant Mass from {signal};Mass (GeV);Events", 280, 0, 140)
 
 background_file = ROOT.TFile.Open(background)
 bg_tree = background_file.Get("Events")
 if not bg_tree:
     print(f"Could not find TTree named 'Events' in the file {background}. Skipping.")
 
-bg_hist = TH1F(f"muon_mass_", f"Invariant Mass from {background};Mass (GeV);Events", 120, 0, 120)
+bg_hist = TH1F(f"muon_mass_", f"Invariant Mass from {background};Mass (GeV);Events", 280, 0, 140)
 
 
 for event in sig_tree:
@@ -102,9 +102,15 @@ for event in bg_tree:
             mass = (p1 + p2).M()
             bg_hist.Fill(mass)
 
+
+output_file = ROOT.TFile("combined_hist.root", "RECREATE")
+
+
 sig_hist.Scale(scale_signal)
 bg_hist.Scale(scale_background)
 sig_hist.Add(bg_hist)
+
+sig_hist.Write()
 
 # Draw and save final combined histogram
 canvas = TCanvas("canvas", "canvas", 800, 600)
@@ -113,3 +119,10 @@ sig_hist.Draw()
 canvas.SaveAs("combined_muon_invariant_mass.png")
 
 print("Combined plot saved as combined_muon_invariant_mass.png")
+
+
+
+
+output_file.Close()
+
+print("Combined histogram saved as combined_hist.root")
