@@ -13,18 +13,13 @@ int main() {
 
     pythia.readString("Top:gg2ttbar = on");
     pythia.readString("Top:qqbar2ttbar = on");
-
-    // pythia.readString("6:onMode = off");
-    // pythia.readString("6:onIfMatch = 24 5");
-
     pythia.readString("24:onMode = off");
     pythia.readString("24:onIfMatch = -13 14");
     pythia.readString("-24:onMode = off");
     pythia.readString("-24:onIfMatch = 13 -14");
-
     pythia.readString("PhaseSpace:mHatMin = 60.");
-    //pythia.readString("PhaseSpace:mHatMax = 120.");
     pythia.readString("Beams:eCM = 13600");
+    
     pythia.init();
     int passedEvents=0;
 
