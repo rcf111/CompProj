@@ -43,7 +43,7 @@ int main() {
     tree->Branch("Id", &Id);
 
 
-    pythia.run(15000, [&](Pythia* pythiaPtr){
+    pythia.run(1000000, [&](Pythia* pythiaPtr){
         ++passedEvents;
         Pt.clear(); Theta.clear(); Phi.clear(); Id.clear();
         int good_muons = 0;

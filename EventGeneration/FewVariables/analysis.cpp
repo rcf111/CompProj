@@ -22,13 +22,13 @@ const std::vector<std::string> inputFiles = {
 const std::vector<double> scaleFactors = {
     //4.542*0.6,   // <-- scale for signal file (See read.me to see how I got them)
     //0.062 *0.6 // <-- scale for background file
-   3.684, 17.401
+   0.6, 10.12
    //22.82, 0.29
 };
 
 // Mass range for histogram and fit
-const double massMin = 60.0;
-const double massMax = 120.0;
+const double massMin = 40;
+const double massMax = 140.0;
 const int histBins = 120;
 
 // Signal mass window for integration (around Z boson ~91.2 GeV)
@@ -39,44 +39,28 @@ const double signalMassWindow = 10.0; // +/- 10 GeV window, adjust as needed
 void buildHistogram(TH1F* hist);
 double integrateFunction(TF1* func, double low, double high);
 
-Double_t doubleCB(Double_t *x, Double_t *par) {
-    // par[0] = Norm
-    // par[1] = Mean
-    // par[2] = Sigma
-    // par[3] = AlphaL
-    // par[4] = nL
-    // par[5] = AlphaR
-    // par[6] = nR
-    // par[7] = offset
+//Fit function Laundau + Gauss
+Double_t landauPlusGauss(Double_t *x, Double_t *par) {
+    // Parameters:
+    // par[0] = Landau amplitude
+    // par[1] = Landau MPV
+    // par[2] = Landau width (sigma)
+    // par[3] = Gaussian amplitude
+    // par[4] = Gaussian mean
+    // par[5] = Gaussian sigma
 
     Double_t xx = x[0];
-    Double_t norm = par[0];
-    Double_t mean = par[1];
-    Double_t sigma = par[2];
-    Double_t alphaL = par[3];
-    Double_t nL = par[4];
-    Double_t alphaR = par[5];
-    Double_t nR = par[6];
-    Double_t offset = par[7];
 
-    Double_t t = (xx - mean) / sigma;
-    Double_t result = 0.0;
+    // Landau component
+    Double_t landau = par[0] * TMath::Landau(xx, par[1], par[2], true);
+    
+    // Gaussian component
+    Double_t gauss = par[3] * TMath::Gaus(xx, par[4], par[5], true);
 
-    if (t < -alphaL) {
-        Double_t A = pow(nL / fabs(alphaL), nL) * exp(-0.5 * alphaL * alphaL);
-        Double_t B = nL / fabs(alphaL) - fabs(alphaL);
-        result = norm * A * pow(B - t, -nL) + offset;
-    }
-    else if (t > alphaR) {
-        Double_t A = pow(nR / fabs(alphaR), nR) * exp(-0.5 * alphaR * alphaR);
-        Double_t B = nR / fabs(alphaR) - fabs(alphaR);
-        result = norm * A * pow(B + t, -nR)+ offset;
-    }
-    else {
-        result = norm * exp(-0.5 * t * t)+ offset;
-    }
-    return result;
-    }
+    return landau + gauss;
+}
+
+
 
 int main() {
     TH1F* combinedHist = new TH1F("combinedHist", "Dimuon Invariant Mass;Mass (GeV);Events", histBins, massMin, massMax);
@@ -101,11 +85,6 @@ int main() {
 
 
         // Set up branches (assuming branches: pT, eta, phi are arrays or std::vector<double>)
-        // Modify these types if your tree has arrays or different types
-        // std::vector<float>* Pt = nullptr;
-        // std::vector<float>* Theta = nullptr;
-        // std::vector<float>* Phi = nullptr;
-
         ROOT::VecOps::RVec<float>* Pt = nullptr;
         ROOT::VecOps::RVec<float>* Theta = nullptr;
         ROOT::VecOps::RVec<float>* Phi = nullptr;
@@ -165,7 +144,6 @@ int main() {
 
             // Use last two muons to calculate invariant mass (as in your original code)
             double mass = (muons[muons.size()-1] + muons[muons.size()-2]).M();
-            //std::cout<< mass <<std::endl;
             if(i==0){
                 sig_Hist->Fill(mass);
             } else if(i==1){
@@ -177,7 +155,7 @@ int main() {
        
         // Scale histogram and add to combined
         file->Close();
-        //delete tempHist; This line causes a segmentation fault if active, I don't know why
+
     }
 
     
@@ -187,7 +165,7 @@ int main() {
     canvas->SetLogy();
     combinedHist->Add(sig_Hist);
     combinedHist->Add(bg_Hist);
-    combinedHist->SetMinimum(75);
+    combinedHist->SetMinimum(700);
     combinedHist->SetLineColor(kRed);
     sig_Hist->SetLineColor(kBlue);
     bg_Hist->SetLineColor(kGreen);
@@ -207,87 +185,72 @@ int main() {
     // Fit combined histogram in the mass range
     // Define signal+background function:
     // For example: background = exponential, signal = Gaussian (adjust as needed)
-    // TF1* fitFunc = new TF1("fitFunc", 
-    //     "[0]*TMath::Gaus(x,[1],[2],true) + [3] + [4]*exp(-[5]*x)", massMin, massMax);
+    TF1 *fitFunc = new TF1("signal", landauPlusGauss, massMin, massMax, 6);
 
     
-    // Initial parameter guesses:
-    // fitFunc->SetParameters(
-    //     combinedHist->GetMaximum(),  // Gaussian amplitude guess
-    //     signalMassCenter,            // Mean near Z mass
-    //     2.5,                        // Width guess (GeV)
-    //     100,                         // Background  constant term
-    //     0.0,                          // exp decay amplitude
-    //     0.0                          // decay factor
-    // );
+    //Initial parameter guesses:
+    fitFunc->SetParNames("LandauAmp", "LandauMPV", "LandauSigma",
+                     "GaussAmp", "GaussMean", "GaussSigma");
 
-    // TF1* bgFunc = new TF1("bgFunc", "[0]+[1] * exp(-[2]*x)", massMin, massMax);
-    // bgFunc->SetParameters(fitFunc->GetParameter(3), fitFunc->GetParameter(4),
-    //                      fitFunc->GetParameter(5));
-    
-
-
-
-    
-    TF1 *fitFunc = new TF1("fitFunc", doubleCB, massMin, massMax, 8);
-    fitFunc->SetParNames("Norm", "Mean", "Sigma", "AlphaL", "nL", "AlphaR", "nR", "offset");
     fitFunc->SetParameters(
-    1e5,    // Norm
-    91.1,   // Mean
-    2.0,    // Sigma
-    1.5,    // AlphaL
-    3.0,    // nL
-    2.0,    // AlphaR
-    4.0,    // nR
-    1e3     // Offset (background floor)
+    10,   // A₁: Landau amplitude (lower than Gaussian)
+    90.0,   // μ₁: Landau MPV, peak of background
+    100,    // σ₁: Landau width
+
+    1e6,  // A₂: Gaussian amplitude (sharp peak)
+    91.0,   // μ₂: Gaussian mean (Z boson peak)
+    2.     // σ₂: Gaussian width
     );
-    // TF1* bgFunc = new TF1("bgFunc", "[0]+[1] * exp(-[2]*x)", massMin, massMax);
-    // bgFunc->SetParameters(5000., 0.1, -0.01);
+    
+    combinedHist->Fit(fitFunc, "RN");
 
-
-
-    combinedHist->Fit(fitFunc, "R");
-
-   
+    // Define Landau-only background function with same parameters as used in combined fit
+    TF1 *bgFunc = new TF1("bgFunc", " [0]*TMath::Landau(x, [1], [2], true) ", massMin, massMax);
+    bgFunc->SetParameters(
+        fitFunc->GetParameter(0), // Landau amplitude
+        fitFunc->GetParameter(1), // Landau MPV
+        fitFunc->GetParameter(2)  // Landau sigma
+    );
 
     // Define integration window around signal peak
-    // double lowBound = signalMassCenter - signalMassWindow;
-    // double highBound = signalMassCenter + signalMassWindow;
+    double lowBound = signalMassCenter - signalMassWindow;
+    double highBound = signalMassCenter + signalMassWindow;
 
-    // double totalIntegral = fitFunc->Integral(lowBound, highBound) / combinedHist->GetBinWidth(1);
-    // double bgIntegral = bgFunc->Integral(lowBound, highBound) / combinedHist->GetBinWidth(1);
-    // double signalIntegral = totalIntegral - bgIntegral;
+    double totalIntegral = fitFunc->Integral(lowBound, highBound) / combinedHist->GetBinWidth(1);
+    double bgIntegral = bgFunc->Integral(lowBound, highBound) / combinedHist->GetBinWidth(1);
+    double signalIntegral = totalIntegral - bgIntegral;
 
     // // Statistical significance (naive)
-    // double significance = signalIntegral / std::sqrt(bgIntegral);
+    double significance = signalIntegral / std::sqrt(bgIntegral);
 
     // Output results
-    // std::cout << "Integration window: [" << lowBound << ", " << highBound << "] GeV" << std::endl;
-    // std::cout << "Total events in window (signal+background): " << totalIntegral << std::endl;
-    // std::cout << "Background events in window: " << bgIntegral << std::endl;
-    // std::cout << "Signal events in window (total - background): " << signalIntegral << std::endl;
-    // std::cout << "Estimated significance (S / sqrt(B)): " << significance << std::endl;
+    std::cout << "Integration window: [" << lowBound << ", " << highBound << "] GeV" << std::endl;
+    std::cout << "Total events in window (signal+background): " << totalIntegral << std::endl;
+    std::cout << "Background events in window: " << bgIntegral << std::endl;
+    std::cout << "Signal events in window (total - background): " << signalIntegral << std::endl;
+    std::cout << "Estimated significance (S / sqrt(B)): " << significance << std::endl;
 
     // Save plot with fit
     TCanvas* c = new TCanvas("c", "Dimuon Mass Fit", 800, 600);
-    combinedHist->SetMinimum(2000);
+    //combinedHist->SetMinimum(2000);
     combinedHist->Draw();
     c->SetLogy();
     fitFunc->SetLineColor(kBlue);
     fitFunc->Draw("same");
-    // bgFunc->SetLineColor(kGreen);
-    // bgFunc->SetLineStyle(2);
-    // bgFunc->Draw("same");
-    // bg_Hist->SetLineColor(kOrange);
-    // bg_Hist->Draw("Same");
+    bgFunc->SetLineColor(kGreen);
+    bgFunc->SetLineStyle(2);
+    bgFunc->Draw("same");
+    bg_Hist->SetLineColor(kOrange);
+    bg_Hist->Draw("Same");
 
     TLegend* legend2 = new TLegend(0.15, 0.7, 0.35, 0.9);  // top-left corner
     legend2->AddEntry(combinedHist, "Combined hist", "l");
-    legend2->AddEntry(fitFunc, "Fit", "l");
-    //legend2->AddEntry(bgFunc, "Background fit", "l");
+    legend2->AddEntry(fitFunc, "Gauss + Landau Fit", "l");
+    legend2->AddEntry(bgFunc, "Background fit", "l");
+    legend2->AddEntry(bg_Hist, "Background hist", "l");
     legend2->Draw();
 
-    c->SaveAs("dimuon_mass_fit.png");
+    c->SaveAs("dimuon_mass_gauss_fit.png");
 
     delete combinedHist;
     delete fitFunc;
