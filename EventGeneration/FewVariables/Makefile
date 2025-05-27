@@ -27,8 +27,6 @@ all:
 	$(MAKE) job
 	./test.job
 
-p8get:
-	wget $(PYTHIA8_URL) && tar xfvz $(PYTHIA8_TGZ) && cd $(PYTHIA8_DIR) && ./configure && make
 
 .cpp.o:
 	$(CXX) $(OPT) $(ROOTCFLAGS) $(INC) -c $< -o $@

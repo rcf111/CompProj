@@ -7,8 +7,6 @@
 using namespace Pythia8;
 
 int main() {
-    // Initialize PYTHIA
-
     PythiaParallel pythia;
 
     pythia.readString("Top:gg2ttbar = on");
@@ -73,45 +71,11 @@ int main() {
   });
 
   
-    // // Event loop
-    // const int nEvents = 10000;
-    // for (int iEvent = 0; iEvent < nEvents; ++iEvent) {
-    //     if (!pythia.next()) continue;
-    //     ++passedEvents;
-
-    //     // Clear previous event data
-    //     Pt.clear();  Theta.clear(); Phi.clear(); Id.clear();
-    //     int good_muons = 0;
-    //     for (int i = 0; i < pythia.event.size(); ++i) {
-    //         const Particle& p = pythia.event[i];
-    //         if (!p.isFinal()) continue;
-
-    //         int id = p.id();
-    //         TLorentzVector vec(p.px(), p.py(), p.pz(), p.e());
-            
-    //         if (abs(id) == 13 or abs(id) == 211) {  // muons and charged pions
-    //             Pt.push_back(p.pT());
-    //             Theta.push_back(p.theta());
-    //             Phi.push_back(p.phi());
-    //             Id.push_back(id);
-    //             if (abs(id) == 13 and abs(vec.Eta()) < 2.1 and vec.Pt() > 20) {  //setting up trigger
-    //                 good_muons++;
-    //         }
-    //         }
-    //     }
-    //     if (good_muons >= 2){
-    //         HLT_DoubleIsoMu20_eta2p1 = 1;
-    //     }
-    //     else HLT_DoubleIsoMu20_eta2p1 = 0;
-    //     tree->Fill();
-    // }
-
     // Write and clean up
     outFile->cd();
     tree->Write("Events", TObject::kOverwrite);
     outFile->Close();
     std::cout << "Events passed pythia.next(): " << passedEvents << "\n";
-
 
     double sigma = pythia.sigmaGen(); // cross section in mb
     std::cout << "Generated cross section: " << sigma * 1e9 << " pb" << std::endl;

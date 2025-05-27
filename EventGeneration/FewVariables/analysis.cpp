@@ -13,17 +13,13 @@
 #include "TLegend.h"
 
 
-// NOTE: Update these before running
-const std::string treeName = "Events";    // <-- Replace with actual TTree name
+const std::string treeName = "Events";    
 const std::vector<std::string> inputFiles = {
-    "Isolated_Stricterfiltered_Smeared_filtered_Signal.root",  // <-- Replace with actual files
+    "Isolated_Stricterfiltered_Smeared_filtered_Signal.root", 
     "Isolated_Stricterfiltered_Smeared_filtered_Background.root"
 };
 const std::vector<double> scaleFactors = {
-    //4.542*0.6,   // <-- scale for signal file (See read.me to see how I got them)
-    //0.062 *0.6 // <-- scale for background file
-   0.6, 10.12
-   //22.82, 0.29
+  62./206621 , 924./182540 
 };
 
 // Mass range for histogram and fit
@@ -32,12 +28,9 @@ const double massMax = 140.0;
 const int histBins = 120;
 
 // Signal mass window for integration (around Z boson ~91.2 GeV)
-const double signalMassCenter = 91.2;
+const double signalMassCenter = 91.002;
 const double signalMassWindow = 10.0; // +/- 10 GeV window, adjust as needed
 
-// Function prototypes
-void buildHistogram(TH1F* hist);
-double integrateFunction(TF1* func, double low, double high);
 
 //Fit function Laundau + Gauss
 Double_t landauPlusGauss(Double_t *x, Double_t *par) {
@@ -158,14 +151,14 @@ int main() {
 
     }
 
-    
+    // Plotting routine for combined histogram without fit
     sig_Hist->Scale(scaleFactors[0]);
     bg_Hist->Scale(scaleFactors[1]);
     TCanvas* canvas = new TCanvas("c", "Dimuon Mass Fit", 800, 600);
     canvas->SetLogy();
     combinedHist->Add(sig_Hist);
     combinedHist->Add(bg_Hist);
-    combinedHist->SetMinimum(700);
+    combinedHist->SetMinimum(1);
     combinedHist->SetLineColor(kRed);
     sig_Hist->SetLineColor(kBlue);
     bg_Hist->SetLineColor(kGreen);
@@ -182,9 +175,7 @@ int main() {
     canvas->SaveAs("dimuon_mass.png");
 
 
-    // Fit combined histogram in the mass range
     // Define signal+background function:
-    // For example: background = exponential, signal = Gaussian (adjust as needed)
     TF1 *fitFunc = new TF1("signal", landauPlusGauss, massMin, massMax, 6);
 
     
@@ -193,13 +184,13 @@ int main() {
                      "GaussAmp", "GaussMean", "GaussSigma");
 
     fitFunc->SetParameters(
-    10,   // A₁: Landau amplitude (lower than Gaussian)
-    90.0,   // μ₁: Landau MPV, peak of background
-    100,    // σ₁: Landau width
+    50,   // A₁: Landau amplitude (lower than Gaussian)
+    85.,   // μ₁: Landau MPV, peak of background
+    100.,    // σ₁: Landau width
 
-    1e6,  // A₂: Gaussian amplitude (sharp peak)
+    515,  // A₂: Gaussian amplitude (sharp peak)
     91.0,   // μ₂: Gaussian mean (Z boson peak)
-    2.     // σ₂: Gaussian width
+    2.5     // σ₂: Gaussian width
     );
     
     combinedHist->Fit(fitFunc, "RN");
@@ -216,12 +207,16 @@ int main() {
     double lowBound = signalMassCenter - signalMassWindow;
     double highBound = signalMassCenter + signalMassWindow;
 
-    double totalIntegral = fitFunc->Integral(lowBound, highBound) / combinedHist->GetBinWidth(1);
+    double totalIntegral = fitFunc->Integral(lowBound, highBound) /combinedHist->GetBinWidth(1);
     double bgIntegral = bgFunc->Integral(lowBound, highBound) / combinedHist->GetBinWidth(1);
     double signalIntegral = totalIntegral - bgIntegral;
 
+   
+
     // // Statistical significance (naive)
     double significance = signalIntegral / std::sqrt(bgIntegral);
+
+    double weight = (5./significance)*(5./significance);
 
     // Output results
     std::cout << "Integration window: [" << lowBound << ", " << highBound << "] GeV" << std::endl;
@@ -229,10 +224,10 @@ int main() {
     std::cout << "Background events in window: " << bgIntegral << std::endl;
     std::cout << "Signal events in window (total - background): " << signalIntegral << std::endl;
     std::cout << "Estimated significance (S / sqrt(B)): " << significance << std::endl;
+    std::cout << "Weight factor w: " << weight << std::endl;
 
-    // Save plot with fit
+    // Fit routine for combined histo and fit
     TCanvas* c = new TCanvas("c", "Dimuon Mass Fit", 800, 600);
-    //combinedHist->SetMinimum(2000);
     combinedHist->Draw();
     c->SetLogy();
     fitFunc->SetLineColor(kBlue);
@@ -250,11 +245,10 @@ int main() {
     legend2->AddEntry(bg_Hist, "Background hist", "l");
     legend2->Draw();
 
-    c->SaveAs("dimuon_mass_gauss_fit.png");
+    c->SaveAs("dimuon_mass_fit.png");
 
     delete combinedHist;
     delete fitFunc;
-    //delete bgFunc;
     delete c;
     
 

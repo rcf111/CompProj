@@ -41,9 +41,8 @@ int main() {
     tree->Branch("Phi", &Phi);
     tree->Branch("Id", &Id);
 
-    //Parallized version, use this it is faster
+    //Parallized version
     pythia.run(1000000, [&](Pythia* pythiaPtr){
-        //if (!pythia.next()) continue;
         ++passedEvents;
         Pt.clear(); Theta.clear(); Phi.clear(); Id.clear();
         int good_muons = 0;
@@ -79,7 +78,7 @@ int main() {
     outFile->Close();
     std::cout << "Events passed pythia.next(): " << passedEvents << "\n";
 
-    pythia.stat();  // prints per-thread stats
+    pythia.stat(); 
     double sigma = pythia.sigmaGen(); // cross section in mb
     double weight = pythia.weightSum();
     std::cout << "Generated cross section: " << sigma * 1e9 << " pb" << std::endl;
