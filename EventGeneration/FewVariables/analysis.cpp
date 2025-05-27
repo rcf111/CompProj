@@ -158,7 +158,7 @@ int main() {
     canvas->SetLogy();
     combinedHist->Add(sig_Hist);
     combinedHist->Add(bg_Hist);
-    combinedHist->SetMinimum(1);
+    combinedHist->SetMinimum(0.05);
     combinedHist->SetLineColor(kRed);
     sig_Hist->SetLineColor(kBlue);
     bg_Hist->SetLineColor(kGreen);
