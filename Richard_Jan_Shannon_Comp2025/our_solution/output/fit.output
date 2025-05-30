@@ -1,0 +1,18 @@
+****************************************
+Minimizer is Minuit2 / Migrad
+Chi2                      =      715.138
+NDf                       =          114
+Edm                       =  4.72697e-07
+NCalls                    =          654
+LandauAmp                 =      952.695   +/-   12.1507     
+LandauMPV                 =      105.204   +/-   0.657661    
+LandauSigma               =      38.1479   +/-   0.572491    
+GaussAmp                  =      38.0502   +/-   0.542698    
+GaussMean                 =      91.0023   +/-   0.0250203   
+GaussSigma                =      1.84705   +/-   0.0322433   
+Integration window: [81.002, 101.002] GeV
+Total events in window (signal+background): 152.76
+Background events in window: 107.099
+Signal events in window (total - background): 45.6602
+Estimated significance (S / sqrt(B)): 4.41209
+Weight factor w: 1.28425
